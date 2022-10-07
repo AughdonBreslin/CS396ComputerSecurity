@@ -1,0 +1,70 @@
+#+TITLE: Homework #1
+#+SUBTITLE: CS306 -- Introduction to IT Security
+#+AUTHOR: Khayyam Saleem
+#+OPTIONS: toc:nil
+#+STARTUP: noindent showall
+#+LATEX_HEADER: \usepackage[1.0in]{geometry}
+
+* Name
+- Khayyam Saleem
+  #+ATTR_LATEX: :width 100
+[[./propic.jpg]]
+
+* Shared or forgotten keys?
+1) Which two basic security properties should be considered in the design of a secure protocol for solving the above problem and why do these properties become relevant in this setting?
+ - Confidentiality
+   - Since they are communicating over an insecure protocol, they should ensure that the messages that they exchange are encrypted or obfuscated so that other malicious parties with access to the channel cannot determine their interactions.
+ - Integrity
+   - Since Alice and Bob will depend on their secret key for their future interactions, they need to be certain that their interactions are a valid confirmation of their shared secret key. Hence, if an attacker can compromise the integrity of their interactions, they may assume their key is valid and secure when it is not.
+2) The above protocol satisfies neither integrity nor confidentiality. The confidentiality is compromised because you can XOR x and y, and the integrity is compromised because a malicious party could change the bits.
+
+* Perfect or imperfect ciphers?
+1) *t = 1* \rarr Essentially a caesar cipher, insecure because the attacker just checks the difference between the first and second characters\\
+   *t = 2* \rarr Password is either /abcd/ or /bedg/. The attacker knows the ciphertext, so he just needs to pick one of two passwords. The key repeats every two letters, and /ac/, /bd/ are both two apart, /bd/ Because of the nature of the two passwords, and how it is equally likely for both passwords to be candidates for a given shift.\\
+   *t = 3* \rarr Because of the nature of the passwords, one ciphertext matches the pattern /x,y,z,x+3/ and the other matches the pattern /x,y,z,x+5/. Thus, Eve can distinguish between the passwords easily given the period.\\
+   *t = 4* \rarr For the same reason that a period of 2 is insecure, a period of 4 is also secure, as both passwords are of length 4, introducing no more information about which password is correct.
+2) It is trivial to break a mono-alphabetic substitution cipher with a chosen plaintext attack because any plaintext with 25 distinct letters can yield the corresponding substitutions for each of the 25, and the last letter in the alphabet can be determined by the process of elimination. The shortest valid English plaintext that can be found is some kind of pangram, like the following, containing 28 letters: /"Jived fox nymph grabs quick waltz"/. The mono-alphabetic substitution cipher is perfectly secure if the probability of any mapping between characters and their ciphertext is equally likely.
+* Crypt-analyze this!
+1) The strategy I employed was crib-dragging. Essentially, I computed the XOR of the first two ciphertexts, then I "dragged" a ~lambda x: x^codecs.encode(guess_word, "hex")~ function over windows of length ~len(guess_word)~ across the XOR of ciphertexts, waiting to see if a probable plaintext could be yielded. Then, after enough guess words, I was able to yield a single plaintext,ciphertext pair, and then XOR'd them together to yield the key. This process of guessing enough words was the most difficult part. Then, I mapped a ~lambda x: x^key~ over the rest of the ciphertexts to yield the hex-encoded plaintexts, and converted those to ascii to yield the English plaintexts. The tools I employed are available [[http://travisdazell.blogspot.com/2012/11/many-time-pad-attack-crib-drag.html][here]], [[https://www.asciitohex.com/][here]], [[https://github.com/SpiderLabs/cribdrag][here]], and [[https://toolbox.lotusfa.com/crib_drag/][here]], as well as the source detailed below with results pasted in from the other sources. There is no centralized script. I apologize.
+    #+BEGIN_SRC python :exports none
+    import codecs
+    search = list(map(lambda x: strxor(x, codecs.encode("Nikos", 'hex'))))
+    key = codecs.encode("youfoundthekey!congratulations!!!", "hex")
+    out = list(map(lambda x: codecs.decode(strxor(x, key), "hex")))
+    #+END_SRC
+    KEY: ~youfoundthekey!congratulations!!!~\\
+    PLAINTEXTS:
+    | ~Testing testing can you read this~ |
+    | ~Yep I can read you perfectly fine~ |
+    | ~Awesome one time pad is working~   |
+    | ~Yay we can make fun of Nikos now~  |
+    | ~I hope no student can read this~   |
+    | ~That would be quite embarrassing~  |
+    | ~Luckily OTP is perfectly secure~   |
+    | ~Didnt Nikos say there was a catch~ |
+    | ~Maybe but I didnt pay attention~   |
+    | ~We should really listen to Nikos~  |
+    | ~Nah we are doing fine without him~ |
+
+2) Using the following script:
+    #+BEGIN_SRC python :results output
+    import codecs
+    import hashlib
+    key = b'Youfoundthekey!congratulations!!!'
+    def SHA_ENCODE(current_key,days_passed):
+        new = current_key
+        for i in range(days_passed):
+            new = bytes.fromhex(hashlib.sha256(new).hexdigest()) + b'\x21'
+        return codecs.encode(new, "hex")
+    print(SHA_ENCODE(key, 14))
+    #+END_SRC
+
+    We yield a key:
+
+    #+RESULTS:
+    : b'5b3539a22634fb642cd08a399d76c00a8a6ccd283e0797de34e6efd6c02e21fb21'
+
+    If we make the first letter of the original key lowercase, we yield the key:
+
+    #+RESULTS:
+    : b'683587a47e3db2fda56325dbcb84b0541eb4d673abf437be60691d41d269456421'
