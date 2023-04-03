@@ -1,0 +1,29 @@
+## Problem 1: Understanding NSEC5 (40%)
+
+Introduced by Goldberg et al. and currently under IETF’s consideration for standardization, NSEC5 comprises a replacement of the NSEC3 protocol for removing an identified vulnerability. Read the Introduction section from the original paper, and answer the following questions.
+
+1. What type of leakage does NSEC3 allow for and what is the technical reason behind such vulnerability? (10%)
+
+   - NSEC3, like its predecessor NSEC, allows for a type of leakage known as **zone enumeration**. Zone enumeration is a technique used by attackers to obtain a list of all the domain names in a DNS zone, by making multiple DNS queries and using the NSEC3 records returned by the DNS server to enumerate the names of the domains in the zone.
+
+   - The technical reason behind this vulnerability is that NSEC3 records contain a cryptographic hash of the next existing domain name in the DNS zone. This allows an attacker to make educated guesses about the names of the domains in the zone, by making multiple DNS queries and using the NSEC3 records to narrow down the possible names of the domains.
+
+2. What are the core technical features of the new cryptographic hash function used by NSEC5 that allows for correct verification of non-existing domain names, yet preventing the type of leakage NSEC3 allows? (10%)
+
+   - The core technical features of the new cryptographic hash function used by NSEC5 that allows for the correct verification of non-existing domain names, yet prevents the type of leakage that NSEC3 allows, are as follows:
+     1. NSEC5 uses the SHA-256 cryptographic hash algorithm, which is considered to be more secure than the SHA-1 algorithm used by NSEC3. This makes it more difficult for attackers to guess the names of domains in a DNS zone using zone enumeration techniques.
+     2. NSEC5 allows domain owners to opt-in to a feature called "progressive hashing," which allows them to gradually switch from SHA-1 to SHA-256 over time, while maintaining compatibility with older DNS software. This allows NSEC5 to provide a high level of security and flexibility for DNS queries.
+     3. NSEC5 records are constructed in a way that prevents attackers from being able to use them to determine the names of domains in a DNS zone. Unlike NSEC3 records, which contain a cryptographic hash of the next existing domain name in the zone, NSEC5 records contain a random number that is unique to each record. This makes it impossible for attackers to use NSEC5 records to enumerate the names of domains in a DNS zone.
+
+3. NSEC5 requires distributing a signing key to any secondary DNS resolver, who by definition is assumed to be untrusted with respect to validity of the provided answers for non-existing domain names. How is this technical choice justified? (10%)
+
+   - The use of a signing key in NSEC5 is necessary to ensure the integrity and authenticity of the NSEC5 records that are provided by the DNS server. In order for a DNS resolver to correctly verify the authenticity of an NSEC5 record, it must have access to the signing key that was used to create the record.
+   - In the case of a secondary DNS resolver, it is necessary to distribute the signing key to the resolver in order for it to be able to correctly verify the authenticity of the NSEC5 records that it receives from the primary DNS server. This may seem like a security risk, as the secondary DNS resolver is assumed to be untrusted with respect to the validity of the provided answers for non-existing domain names.
+   - However, the use of a signing key in NSEC5 is justified by the fact that it provides a strong level of security and integrity for DNS queries. Without the signing key, an attacker could potentially forge NSEC5 records and use them to mount certain types of attacks on the DNS. By distributing the signing key to the secondary DNS resolver, the DNS server is able to ensure that the resolver is able to correctly verify the authenticity of the NSEC5 records that it receives.
+
+4. In terms of secure system design, what is the lesson learnt in view what justified the development of protocols DNSSEC, NSEC, NSEC3 and NSEC5? (10%)
+
+   - The development of protocols such as DNSSEC, NSEC, NSEC3, and NSEC5 highlights the importance of secure system design in protecting against attacks on critical infrastructure. The DNS is a critical component of the internet, as it is responsible for translating human-readable domain names into the numerical IP addresses that are used to route traffic on the internet.
+   - As such, it is important to ensure the security and integrity of the DNS in order to prevent attackers from being able to disrupt internet services or steal sensitive information. The development of these protocols demonstrates the need for robust security measures to protect against various types of attacks on the DNS, such as zone enumeration and man-in-the-middle attacks.
+   - One lesson that can be learned from the development of these protocols is the need to continuously update and improve security measures in response to new threats and vulnerabilities. As new types of attacks are discovered and new technologies are developed, it is necessary to design and implement new protocols and security measures to protect against these threats.
+   - Additionally, the use of cryptographic techniques, such as the use of signing keys and cryptographic hashes in DNSSEC, NSEC, NSEC3, and NSEC5, shows the importance of using strong cryptography in secure system design. By using these techniques, these protocols are able to provide a high level of security and integrity for DNS queries, helping to protect against various types of attacks on the DNS.
